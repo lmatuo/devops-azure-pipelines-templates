@@ -1,0 +1,93 @@
+stages:
+  - stage: checkStage
+    displayName: Check Stage
+    jobs:
+      - job: checkJob
+        continueOnError: false
+        displayName: Check Variables
+        steps:
+          # Get Build Variables
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: |
+                if [ "$(Build.Reason)" == "PullRequest" ]; then
+                  echo 'It is a Pull Request ⚠️'
+                  echo ''
+                  echo 'Build Reason: $(Build.Reason)'
+                  echo 'Pull Request ID: $(System.PullRequest.PullRequestId)'
+                  echo 'Target Branch: $(System.PullRequest.TargetBranch)'
+                  echo 'Source Branch: $(System.PullRequest.SourceBranch)'
+                else
+                  echo 'Build Reason: $(Build.Reason)'
+                  echo 'Source Branch: $(Build.SourceBranch)'
+                  echo 'Source Branch Name: $(Build.SourceBranchName)'
+                fi
+            displayName: Check Variables
+
+  - stage: validateStage
+    displayName: Terraform Validate
+    condition: succeeded('checkStage')
+    jobs:
+      - job: validateJob
+        continueOnError: false
+        steps:
+          # Configure Terraform
+          - script: |
+              terraform $(init-command) $(init-options-command)
+            displayName: Terraform Init
+
+          # Validate Project Configuration
+          - script: |
+              terraform $(validate-command)
+            displayName: Terraform Validate
+
+  - stage: planStage
+    condition: succeeded('validateStage')
+    displayName: Terraform Plan
+    jobs:
+      - job: planJob
+        continueOnError: false
+        steps:
+          # Configure Terraform
+          - script: |
+              terraform $(init-command) $(init-options-command)
+            displayName: Terraform Init
+          
+          # Plan Terraform Actions
+          - script: |
+              terraform $(plan-command) $(plan-options-command)
+            displayName: Terraform Plan
+          
+          # Publish Terraform Plan
+          - task: PublishPipelineArtifact@1
+            displayName: Publish Plan
+            inputs:
+              targetPath: $(plan-artifact-target)
+              artifact: $(plan-artifact-name)
+              publishLocation: $(plan-publish-location)
+            
+  - stage: applyStage
+    condition: succeeded('planStage')
+    displayName: Terraform Apply
+    jobs:
+      - job: applyJob
+        continueOnError: false
+        steps:
+          # Configure Terraform
+          - script: |
+              terraform $(init-command) $(init-options-command)
+            displayName: Terraform Init
+          
+          # Download Terraform Plan Artifact
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Plan
+            inputs:
+              source: $(plan-download-build-type)
+              artifact: $(plan-artifact-name)
+              path: $(plan-download-path)
+          
+          # Apply Terraform Plan
+          - script: |
+              terraform $(apply-command) $(apply-options-command)
+            displayName: Terraform Apply

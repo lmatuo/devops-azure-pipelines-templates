@@ -1,0 +1,38 @@
+variables:
+  # solution info
+  - name: solution
+    value: '**/*.sln'
+
+  # build info
+  - name: build-platform
+    value: 'Any CPU'
+  - name: build-configuration
+    value: 'Release'
+  - name: msbuild-args
+    value: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(artifact-staging-directory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+  - name: build-type
+    value: 'current'
+  - name: download-path
+    value: '$(System.DefaultWorkingDirectory)'
+
+  # publish info
+  - name: artifact-staging-directory
+    value: '$(Build.ArtifactStagingDirectory)'
+  - name: artifact-name
+    value: 'drop'
+  - name: publish-location
+    value: 'Container'
+  - name: webapp-package
+    value: '$(artifact-staging-directory)\WebApp.zip'
+  - name: package-for-linux
+    value: '$(System.DefaultWorkingDirectory)/drop/WebApp.zip'
+
+  # deployment info
+  - name: connection-type
+    value: 'AzureRM'
+  - name: app-type
+    value: 'webApp'
+  - name: azure-subscription
+    value: 'sentinela-cm-bisb-dev-subscription'
+  - name: webapp-name
+    value: 'sentinela-cm-dev-backend-webapp'

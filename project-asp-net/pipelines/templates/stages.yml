@@ -1,0 +1,51 @@
+stages:
+- stage: build
+  displayName: 'Build Stage'
+  jobs:
+    - job: BuildJob
+      displayName: 'Build Job'
+      steps:
+        - task: NuGetToolInstaller@1
+          displayName: 'Install NuGet'
+
+        - task: NuGetCommand@2
+          displayName: 'NuGet Restore'
+          inputs:
+            restoreSolution: '$(solution)'
+
+        - task: VSBuild@1
+          displayName: 'Visual Studio Build'
+          inputs:
+            solution: '$(solution)'
+            msbuildArgs: '$(msbuild-args)'
+            platform: '$(build-platform)'
+            configuration: '$(build-configuration)'
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish Build Artifact'
+          inputs:
+            PathtoPublish: '$(artifact-staging-directory)'
+            ArtifactName: '$(artifact-name)'
+            publishLocation: '$(publish-location)'
+
+- stage: deploy
+  displayName: 'Deploy Stage'
+  dependsOn: build
+  jobs:
+    - job: DeployJob
+      displayName: 'Deploy Job'
+      steps:
+        - task: DownloadBuildArtifacts@1
+          displayName: 'Download Build Artifact'
+          inputs:
+            buildType: '$(build-type)'
+            downloadPath: '$(download-path)'
+
+        - task: AzureRmWebAppDeployment@4
+          displayName: 'Deploy to WebApp'
+          inputs:
+            ConnectionType: '$(connection-type)'
+            azureSubscription: '$(azure-subscription)'
+            appType: '$(app-type)'
+            WebAppName: '$(webapp-name)'
+            packageForLinux: '$(package-for-linux)'

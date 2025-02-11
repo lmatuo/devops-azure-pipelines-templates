@@ -1,0 +1,32 @@
+### Ignore logs and temporary files ###
+*.log
+*.tmp
+*.swp
+*.swo
+
+### Ignore system files ###
+.DS_Store
+Thumbs.db
+
+### Ignore IDE and editor configurations ###
+.vscode/
+.idea/
+*.iml
+
+### Ignore environment files ###
+.env
+.env.local
+
+### Ignore build files ###
+build/
+dist/
+
+### Ignore SonarQube-specific configuration files ###
+sonar-project.properties
+sonar-cache/
+
+### Ignore any OS-specific files ###
+Desktop.ini
+
+### Ignore backup files ### 
+*~

@@ -1,0 +1,17 @@
+trigger:
+  - qa
+      
+pr:
+  branches:
+    include:
+      - qa 
+
+pool:
+  vmImage: ubuntu-22.04
+
+variables:
+  - group: project-qa-stack-credentials
+  - template: templates/vars.yml
+
+stages:
+  - template: templates/stages.yml

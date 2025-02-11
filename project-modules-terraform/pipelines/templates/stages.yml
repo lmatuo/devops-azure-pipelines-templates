@@ -1,0 +1,187 @@
+stages:
+  - stage: checkStage
+    displayName: Check Stage
+    jobs:
+      - job: checkJob
+        continueOnError: false
+        displayName: Check Variables
+        steps:
+          # Get Build Variables
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: |
+                if [ "$(Build.Reason)" == "PullRequest" ]; then
+                  echo 'It is a Pull Request ⚠️'
+                  echo ''
+                  echo 'Build Reason: $(Build.Reason)'
+                  echo 'Pull Request ID: $(System.PullRequest.PullRequestId)'
+                  echo 'Target Branch: $(System.PullRequest.TargetBranch)'
+                  echo 'Source Branch: $(System.PullRequest.SourceBranch)'
+                else
+                  echo 'Build Reason: $(Build.Reason)'
+                  echo 'Source Branch: $(Build.SourceBranch)'
+                  echo 'Source Branch Name: $(Build.SourceBranchName)'
+                fi
+            displayName: Check Variables
+
+  - stage: validateStage
+    displayName: Terraform Validate
+    condition: succeeded('checkStage')
+    jobs:
+      - job: validateJob
+        continueOnError: false
+        steps:
+          # Install Terraform
+          - task: TerraformInstaller@1
+            displayName: Terraform Install
+            inputs:
+              terraformVersion: $(terraform-version)
+
+          # Configure Terraform
+          - task: TerraformTaskV4@4
+            displayName: Terraform Init
+            inputs:
+              provider: $(terraform-provider)
+              command: $(init-command)
+              backendServiceArm: $(subscription-name)
+              backendAzureRmResourceGroupName: $(backend-sa-rg)
+              backendAzureRmStorageAccountName: $(backend-sa)
+              backendAzureRmContainerName: $(backend-container)
+              backendAzureRmKey: $(backend-storage-key)
+
+          # Validate Project Configuration
+          - task: TerraformTaskV4@4
+            displayName: Terraform Validate
+            inputs:
+              provider: $(terraform-provider)
+              command: $(validate-command)
+
+          # Generate SAS Connection String
+          - task: AzureCLI@2
+            displayName: Generate SAS Token
+            inputs:
+              azureSubscription: $(subscription-name)
+              scriptType: "pscore"
+              scriptLocation: "inlineScript"
+              inlineScript: |
+                  $end = (Get-Date).AddMinutes(30).ToUniversalTime().ToString("yyyy-MM-ddTHH:mmZ")
+                  Write-Host "Generating SAS token with expiry time: $end"
+                  
+                  $sasToken = az storage blob generate-sas --account-name "$(backend-sa)" --container-name "$(backend-container)" --name "$(backend-storage-key)" --permissions cdeimrw --expiry $end --https-only
+                  
+                  if ($LASTEXITCODE -ne 0) {
+                      Write-Host "Failed to generate SAS token."
+                      exit 1
+                  }
+                  
+                  $sasToken = $sasToken -replace '"', '' -replace '^.*?(sp=.*)$','$1'
+                  
+                  Write-Host "##vso[task.setvariable variable=sas-token;isOutput=true]$sasToken"
+                  Write-Host "Generated SAS Token: $sasToken"
+            name: getSasToken
+
+  - stage: planStage
+    condition: succeeded('validateStage')
+    displayName: Terraform Plan
+    jobs:
+      - job: planJob
+        continueOnError: false
+        variables:
+          sas-token-validate: $[ stageDependencies.validate.Validate.outputs['getSasToken.sas-token'] ]
+        steps:
+          # Install Terraform
+          - task: TerraformInstaller@1
+            displayName: Terraform Install
+            inputs:
+              terraformVersion: $(terraform-version)
+          
+          # Configure Terraform
+          - task: TerraformTaskV4@4
+            displayName: Terraform Init
+            inputs:
+              provider: $(terraform-provider)
+              command: $(init-command)
+              backendServiceArm: $(subscription-name)
+              backendAzureRmResourceGroupName: $(backend-sa-rg)
+              backendAzureRmStorageAccountName: $(backend-sa)
+              backendAzureRmContainerName: $(backend-container)
+              backendAzureRmKey: $(backend-storage-key)
+          
+          # Breake Blob State
+          - task: AzureCLI@2
+            displayName: Break Lease Blob
+            name: BreakLease
+            inputs:
+              azureSubscription: $(subscription-name)
+              scriptType: "pscore"
+              scriptLocation: inlineScript
+              inlineScript: |
+                $(break-lease-script)
+          
+          # Wait for AzureCLI Operation
+          - script: |
+              echo "Waiting for 30 seconds before retrying..."
+              sleep 30
+            displayName: Wait 30 seconds
+          
+          # Plan Terraform Actions
+          - task: TerraformTaskV4@4
+            displayName: Terraform Plan
+            inputs:
+              provider: $(terraform-provider)
+              command: $(plan-command)
+              commandOptions: $(plan-options-command)
+              environmentServiceNameAzureRM: $(subscription-name)
+              output: $(plan-file-name)
+          
+          # Publish Terraform Plan
+          - task: PublishPipelineArtifact@1
+            displayName: Publish Plan
+            inputs:
+              targetPath: $(plan-artifact-target)
+              artifact: $(plan-artifact-name)
+              publishLocation: $(plan-publish-location)
+            
+  - stage: applyStage
+    condition: succeeded('planStage')
+    displayName: Terraform Apply
+    jobs:
+      - job: applyJob
+        continueOnError: false
+        steps:
+          # Install Terraform
+          - task: TerraformInstaller@1
+            displayName: Terraform Install
+            inputs:
+              terraformVersion: $(terraform-version)
+          
+          # Configure Terraform
+          - task: TerraformTaskV4@4
+            displayName: Terraform Init
+            inputs:
+              provider: $(terraform-provider)
+              command: $(init-command)
+              backendServiceArm: $(subscription-name)
+              backendAzureRmResourceGroupName: $(backend-sa-rg)
+              backendAzureRmStorageAccountName: $(backend-sa)
+              backendAzureRmContainerName: $(backend-container)
+              backendAzureRmKey: $(backend-storage-key)
+          
+          # Download Terraform Plan Artifact
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Plan
+            inputs:
+              source: $(plan-download-build-type)
+              artifact: $(plan-artifact-name)
+              path: $(plan-download-path)
+          
+          # Apply Terraform Plan
+          - task: TerraformTaskV4@4
+            displayName: Terraform Apply
+            inputs:
+              provider: $(terraform-provider)
+              command: $(apply-command)
+              commandOptions: $(apply-options-command)
+              workingDirectory: $(apply-working-directory)
+              environmentServiceNameAzureRM: $(subscription-name)

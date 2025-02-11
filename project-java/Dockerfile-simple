@@ -1,0 +1,45 @@
+# Use the official Maven image as the base image for the build stage
+FROM maven:3.8.4-openjdk-17 AS build
+
+# Set the working directory inside the build container
+WORKDIR /app
+
+# Copy the entire project to the build container
+COPY . .
+
+# Build the application and skip tests for faster builds
+RUN mvn clean install -DskipTests=true
+
+# Use the official OpenJDK image as the base image for the runtime stage
+FROM openjdk:17-jdk-alpine
+
+# Set the working directory inside the runtime container
+WORKDIR /app
+
+# Database arguments
+# ARG DATABASE_HOST
+# ARG DATABASE_NAME
+# ARG DATABASE_USER
+# ARG DATABASE_PASSWORD
+
+# ENV DATABASE_HOST=$DATABASE_HOST
+# ENV DATABASE_NAME=$DATABASE_NAME
+# ENV DATABASE_USER=$DATABASE_USER
+# ENV DATABASE_PASSWORD=$DATABASE_PASSWORD
+
+# Copy the JAR file from the build stage to the runtime container
+COPY --from=build /app/target/myapp-0.0.1-SNAPSHOT.jar .
+
+# # Copy and replace application-dev.properties with environment variables
+# COPY src/main/resources/application-dev.properties /app/application-dev.properties
+# RUN sed -i "s/\${DATABASE_HOST}/${DATABASE_HOST}/g" /app/application-dev.properties && \
+#     sed -i "s/\${DATABASE_NAME}/${DATABASE_NAME}/g" /app/application-dev.properties && \
+#     sed -i "s/\${DATABASE_USER}/${DATABASE_USER}/g" /app/application-dev.properties && \
+#     sed -i "s/\${DATABASE_PASSWORD}/${DATABASE_PASSWORD}/g" /app/application-dev.properties && \
+#     cat /app/application-dev.properties
+
+# Expose the port that the application will listen on
+EXPOSE 8080
+
+# Define the command to run the Java application
+CMD ["java", "-jar", "myapp-0.0.1-SNAPSHOT.jar"]

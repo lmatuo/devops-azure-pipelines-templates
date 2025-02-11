@@ -1,0 +1,81 @@
+### Node.js dependencies ###
+node_modules/
+
+### Optional npm cache directory ###
+.npm/
+
+### Optional Yarn cache directory ###
+.yarn/
+.pnp.*
+
+### Optional output from 'npm pack' ###
+*.tgz
+
+### Logs ###
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+### Environment variables ###
+.env
+.env.test
+.env.production
+.env.local
+
+### Node.js cache ###
+.cache/
+
+### Coverage directory used by tools like istanbul ###
+coverage/
+
+### Debug output from Node.js ###
+node_modules/
+*.log
+
+### Build output directory ###
+dist/
+build/
+
+### .nyc output ###
+.nyc_output/
+
+### TypeScript ###
+*.tsbuildinfo
+
+### Compiled binary addons (npm node-gyp) ###
+build/Release/
+
+### Compiled source files ###
+lib-cov/
+*.map
+*.lock
+
+### NPM lockfile ###
+package-lock.json
+
+### Yarn lockfile ###
+yarn.lock
+
+### pm2 logs ###
+.pm2/logs/
+
+### Local AWS credentials ###
+.aws/
+
+### Editor directories and files ###
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+### OS generated files ###
+.DS_Store
+Thumbs.db
+
+### Miscellaneous ###
+*.pem
+*.key
+*.crt
+*.pfx

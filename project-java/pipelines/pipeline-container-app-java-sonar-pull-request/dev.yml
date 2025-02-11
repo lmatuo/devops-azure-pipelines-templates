@@ -1,0 +1,17 @@
+trigger:
+  - dev
+      
+pr:
+  branches:
+    include:
+      - dev 
+
+pool:
+  vmImage: ubuntu-22.04 ⚠️
+
+variables:
+  - group: project-dev-stack-credentials ⚠️
+  - template: templates/vars.yml
+
+stages:
+  - template: templates/stages.yml

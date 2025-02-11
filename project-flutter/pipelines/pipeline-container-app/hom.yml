@@ -1,0 +1,17 @@
+trigger:
+  - hom
+      
+pr:
+  branches:
+    include:
+      - hom 
+
+pool:
+  vmImage: ubuntu-22.04 ⚠️
+
+variables:
+  - group: project-hom-stack-credentials ⚠️
+  - template: templates/vars.yml
+
+stages:
+  - template: templates/stages.yml

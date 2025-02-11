@@ -1,0 +1,91 @@
+# Ensure variables are in the Azure DevOps variable group
+# TERRAFORM_VERSION
+# TERRAFORM_PROVIDER
+# AZURE_SUBSCRIPTION
+# AZURE_BACKEND_SA_RG
+# AZURE_BACKEND_SA_NAME
+# AZURE_BACKEND_CONTAINER_NAME
+# AZURE_BACKEND_STORAGE_KEY
+# BREAK_LEASE_SCRIPT
+## BREAK LEASE SCRIPT EX: az storage blob lease break --blob-name '$(backend-storage-key)' --container-name '$(backend-container)' --account-key '$(backend-storage-key)' --account-name '$(backend-sa)' --sas-token '$(sas-token-validate)'
+# PLAN_OPTIONS_COMMAND
+## PLAN OPTIONS COMMAND EX: -var postgres_admin_login=$(postgres-login) -var postgres_admin_password=$(postgres-password) -input=false -out $(plan-file-name)
+
+variables:
+  # debug info
+  # - name: system.debug
+  #   value: true
+
+  # versions
+  - name: terraform-version
+    value: "$(TERRAFORM_VERSION)"
+  - name: terraform-provider
+    value: "azurerm"
+
+  # standard info:
+  - name: subscription-name
+    value: "$(AZURE_SUBSCRIPTION)"
+
+  # backend settings
+  - name: backend-sa-rg
+    value: "$(AZURE_BACKEND_SA_RG)"
+  - name: backend-sa
+    value: "$(AZURE_BACKEND_SA)"
+  - name: backend-container
+    value: "$(AZURE_BACKEND_CONTAINER)"
+  - name: backend-storage-key
+    value: "$(AZURE_BACKEND_STORAGE_KEY)"
+
+  # blob configuration
+  - name: sas-token
+    value: ""
+  - name: break-lease-script
+    value: "$(BREAK_LEASE_SCRIPT)"
+
+  # environment info
+  # - name: postgres-login
+  #   value: "$(POSTGRES_LOGIN)"
+  # - name: postgres-password
+  #   value: "$(POSTGRES_PASSWORD)"
+  
+  # init command
+  - name: init-command
+    value: "init"
+
+  # validate command
+  - name: validate-command
+    value: "validate"
+
+  # plan commands
+  - name: plan-command
+    value: "plan"
+  - name: plan-options-command
+    value: "$(PLAN_OPTIONS_COMMAND)"
+  
+  # plan artifact info
+  - name: plan-artifact-name
+    value: "terraform-plan"
+  
+  # plan artifact file info
+  - name: plan-file-name
+    value: "terraform-plan.out"
+  
+  # plan artifact publish info
+  - name: plan-artifact-target
+    value: "$(System.DefaultWorkingDirectory)/$(plan-file-name)"
+  - name: plan-publish-location
+    value: "pipeline"
+  
+  # plan artifact download info
+  - name: plan-download-build-type
+    value: "current"
+  - name: plan-download-path
+    value: "$(Pipeline.Workspace)/$(plan-artifact-name)"
+  
+  # apply commands
+  - name: apply-command
+    value: "apply"
+  - name: apply-options-command
+    value: "-auto-approve $(plan-download-path)/$(plan-file-name)"
+  - name: apply-working-directory
+    value: "$(System.DefaultWorkingDirectory)"

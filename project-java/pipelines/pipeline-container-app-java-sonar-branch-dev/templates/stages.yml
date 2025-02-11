@@ -1,0 +1,256 @@
+stages:
+  - stage: checkStage
+    displayName: Check Stage
+    jobs:
+      - job: checkJob
+        continueOnError: false
+        displayName: Check Variables
+        steps:
+          # Get Build Variables
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: |
+                if [ "$(Build.Reason)" == "PullRequest" ]; then
+                  echo '⚠️ It is a Pull Request ⚠️'
+                  echo '⚠️ Only this step and compile will be executed ⚠️'
+                  echo ''
+                  echo 'Build Reason: $(Build.Reason)'
+                  echo 'Pull Request ID: $(System.PullRequest.PullRequestId)'
+                  echo 'Target Branch: $(System.PullRequest.TargetBranch)'
+                  echo 'Source Branch: $(System.PullRequest.SourceBranch)'
+                else
+                  echo 'Build Reason: $(Build.Reason)'
+                  echo 'Source Branch: $(Build.SourceBranch)'
+                  echo 'Source Branch Name: $(Build.SourceBranchName)'
+                fi
+            displayName: Check Variables
+
+  - stage: compileStage
+    displayName: Compile Stage
+    condition: succeeded('checkStage')
+    jobs:
+      - job: compileJob
+        continueOnError: false
+        displayName: Run Compile and Cache
+        steps:
+          # Install Java SDK
+          - task: JavaToolInstaller@0
+            displayName: Install Java SDK
+            inputs:
+              versionSpec: $(java-version-spec)
+              jdkArchitectureOption: $(java-jdk-architecture-option)
+              jdkSourceOption: $(java-jdk-source-option)
+              cleanDestinationDirectory: $(java-jdk-clean-directory)
+
+          # Install Flyway
+          - task: FlywayInstaller@0
+            condition: eq(variables['Build.SourceBranch'], 'refs/heads/dev')
+            displayName: Flyway Installer
+            inputs:
+              flywayVersion: $(flyway-version)
+
+          # Run Flyway Validation
+          - task: FlywayCLI@0
+            condition: eq(variables['Build.SourceBranch'], 'refs/heads/dev')
+            displayName: Flyway Validate
+            inputs:
+              command: $(flyway-command)
+              workingDirectory: $(flyway-working-directory)
+              url: $(flyway-db-url)
+              user: $(flyway-db-user)
+              password: $(flyway-db-password)
+              commandOptions: $(flyway-command-options)
+          
+          # Create Cache Maven Direcotry
+          - script: |
+              mkdir -p /home/vsts/work/1/.m2/repository
+            displayName: Create Cache Directory
+
+
+          # Cache Maven Dependencies
+          - task: Cache@2
+            displayName: Cache Maven
+            inputs:
+              key: 'maven | "$(Agent.OS)" | **/pom.xml'
+              restoreKeys: |
+                maven | "$(Agent.OS)"
+              path: $(cache-maven-path)
+
+          # SonarQube Prepare
+          - task: SonarQubePrepare@6
+            condition: eq(variables['Build.SourceBranch'], 'refs/heads/dev')
+            displayName: Sonar Prepare
+            inputs:
+              SonarQube: $(sonar-service-connection)
+              scannerMode: $(sonar-scanner-mode)
+              extraProperties: |
+                sonar.projectKey=$(sonar-project-key)
+                sonar.projectName=$(sonar-project-name)
+                sonar.sourceEncoding=UTF-8
+                sonar.log.level=TRACE
+                sonar.verbose=true
+
+          # Compile the project with Sonar
+          - task: Maven@4
+            condition: eq(variables['Build.SourceBranch'], 'refs/heads/dev')
+            displayName: Maven with Sonar
+            inputs:
+              goals: $(compile-maven-goals)
+              mavenPomFile: $(compile-maven-pom-file)
+              options: $(compile-maven-options)
+              mavenOptions: $(compile-maven-extra-options)
+              javaHomeOption: $(compile-java-home-option)
+              jdkVersionOption: $(compile-java-jdk-version-option)
+              jdkArchitectureOption: $(compile-java-jdk-architecture-option)
+              publishJUnitResults: false
+              sonarQubeRunAnalysis: true
+
+          # Compile the project without Sonar
+          - task: Maven@4
+            displayName: Maven without Sonar
+            inputs:
+              goals: $(compile-maven-goals)
+              mavenPomFile: $(compile-maven-pom-file)
+              options: $(compile-maven-options)
+              mavenOptions: $(compile-maven-extra-options)
+              javaHomeOption: $(compile-java-home-option)
+              jdkVersionOption: $(compile-java-jdk-version-option)
+              jdkArchitectureOption: $(compile-java-jdk-architecture-option)
+              publishJUnitResults: false
+
+  - stage: testStage
+    displayName: Test Stage
+    condition: |
+      and(
+        succeeded('compileStage'),
+        eq(variables['Build.SourceBranch'], 'refs/heads/dev')
+      )
+    jobs:
+      - job: testJob
+        displayName: Run Tests
+        steps:
+          # Run Unit Tests with JaCoCo
+          - task: Maven@4
+            displayName: Run Unit Tests
+            inputs:
+              goals: $(test-maven-goals)
+              mavenPomFile: $(test-maven-pom-file)
+              testResultsFiles: $(test-maven-tests-results-file)
+              codeCoverageToolOption: $(test-maven-code-coverage-tool)
+              javaHomeOption: $(compile-java-home-option)
+              jdkVersionOption: $(compile-java-jdk-version-option)
+              jdkArchitectureOption: $(compile-java-jdk-architecture-option)
+              publishJUnitResults: true
+
+          # SonarQube Prepare
+          - task: SonarQubePrepare@6
+            displayName: Sonar Prepare
+            inputs:
+              SonarQube: $(sonar-service-connection)
+              scannerMode: $(sonar-scanner-mode)
+              extraProperties: |
+                sonar.projectKey=$(sonar-project-key)
+                sonar.projectName=$(sonar-project-name)
+                sonar.sourceEncoding=UTF-8
+                sonar.log.level=TRACE
+                sonar.verbose=true
+                sonar.qualitygate.wait=true
+                sonar.java.binaries=target/classes
+                sonar.sources=src/main/java
+                sonar.tests=src/test/java
+                sonar.java.jdkHome=$(JAVA_HOME_17_X64)
+                sonar.coverage.jacoco.xmlReportPaths=$(sonar-covarage-jacoco)
+
+          # Run SonarQube Analysis
+          - task: SonarQubeAnalyze@6
+            displayName: SonarQube Analysis
+
+          # Publish SonarQube Results
+          - task: SonarQubePublish@6
+            displayName: SonarQube Results
+            condition: always()
+            inputs:
+              pollingTimeoutSec: '300'
+
+          # Publish Test Results
+          - task: PublishTestResults@2
+            displayName: Test Results
+            inputs:
+              testResultsFiles: $(test-result-file)
+
+  - stage: buildStage
+    displayName: Build Stage
+    condition: |
+      or(
+        and(eq(variables['Build.SourceBranchName'], 'dev'), succeeded('testStage')),
+        and(ne(variables['Build.SourceBranchName'], 'dev'), succeeded('compileStage'))
+      )
+    jobs:
+      - job: buildJob
+        continueOnError: false
+        displayName: Build
+        steps:
+          # Build Docker Image
+          - task: Docker@2
+            displayName: Build Docker Image
+            inputs:
+              command: build
+              repository: $(docker-image-name-repository)
+              dockerfile: $(docker-dockerfile-path)
+              containerRegistry: $(docker-registry-service-connection)
+              tags: $(docker-tag)
+              buildContext: $(docker-build-context)
+              arguments: $(docker-build-arguments)
+
+          # Push Docker Image
+          - task: Docker@2
+            displayName: Push Docker Image
+            inputs:
+              command: push
+              repository: $(docker-image-name-repository)
+              containerRegistry: $(docker-registry-service-connection)
+              tags: $(docker-tag)
+
+  - stage: deployStage
+    displayName: Deploy Stage
+    condition: succeeded('buildStage')
+    jobs:
+      - job: Deploy
+        continueOnError: false
+        displayName: Deploy
+        steps:
+          # Deploy to Azure Container Apps
+          - task: AzureContainerApps@1
+            displayName: Deploy to Azure
+            inputs:
+              azureSubscription: $(azure-subscription)
+              containerAppName: $(azure-container-app-name)
+              resourceGroup: $(azure-resource-group)
+              imageToDeploy: "$(azure-container-registry)/$(docker-image-name-repository):$(docker-tag)"
+
+          # Update Container App
+          - task: AzureCLI@2
+            displayName: Update Container App
+            name: UpdateContainer
+            inputs:
+              azureSubscription: $(azure-subscription)
+              scriptType: "pscore"
+              scriptLocation: "inlineScript"
+              inlineScript: |
+                az containerapp update -n $(azure-container-app-name) -g $(azure-resource-group) --container-name $(azure-container-app-name) -i $(azure-container-registry)/$(docker-image-name-repository):$(docker-tag)
+
+          # Verify Update Status
+          - task: AzureCLI@2
+            displayName: Verify Update Status
+            inputs:
+              azureSubscription: $(azure-subscription)
+              scriptType: "bash"
+              scriptLocation: "inlineScript"
+              inlineScript: |
+                STATUS=$(az containerapp show -n $(azure-container-app-name) -g $(azure-resource-group) --query "properties.provisioningState" -o tsv)
+                if [[ "$STATUS" != "Succeeded" ]]; then
+                  echo "⚠️ Update failed. Check logs for details." && exit 1
+                else
+                  echo "✅ Update completed successfully."
+                fi

@@ -1,0 +1,36 @@
+### Ignore Docker related files ###
+.docker/
+docker-compose.override.yml
+
+### Ignore IDE and editor specific files ###
+.idea/
+.vscode/
+
+### Ignore build and temporary files ###
+*.log
+*.tmp
+*.swp
+
+### Ignore Keycloak related configuration (if you have any sensitive or generated config files) ###
+keycloak/standalone/configuration/
+
+### Ignore Docker image cache and volumes ###
+*.tar
+*.img
+*.iso
+
+### Ignore node_modules if your project includes any Node.js components (optional) ###
+node_modules/
+
+### Ignore any system-specific files ###
+.DS_Store
+Thumbs.db
+
+### Ignore Terraform files (if you're using Terraform in your project) ###
+*.tfstate
+*.tfstate.backup
+.terraform/
+
+### Ignore other files that shouldn't be tracked by Git ###
+*.bak
+*.swp

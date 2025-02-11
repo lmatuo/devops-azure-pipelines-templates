@@ -1,0 +1,39 @@
+# Visual Studio ###
+.vs/
+*.user
+*.suo
+*.userprefs
+
+### Build results ###
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+bin/
+obj/
+publish/
+
+### Visual Studio Code ###
+.vscode/
+*.code-workspace
+
+### Rider ###
+.idea/
+*.sln.iml
+
+### NLog ###
+nlog.config
+
+### Local IIS Express ###
+IISExpress/
+*.vspscc
+*.vssscc
+
+### ASP.NET specific ###
+appsettings*.json
+*.db
+*.sln.docstates
+
+### Packages ###
+*.nupkg
+packages/

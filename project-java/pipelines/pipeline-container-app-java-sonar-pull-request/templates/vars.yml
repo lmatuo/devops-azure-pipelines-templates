@@ -1,0 +1,128 @@
+# Ensure variables are in the Azure DevOps variable group
+# DOCKER_REGISTRY_CONNECTION
+# DOCKER_IMAGE_NAME_REPOSITORY
+# DOCKER_BUILD_ARGS (⚠️ IF NECESSARY ⚠️)
+## BUILD ARG EX: --build-arg DATABASE_HOST=$(DATABASE_HOST) --build-arg DATABASE_NAME=$(DATABASE_NAME) --build-arg DATABASE_USER=$(DATABASE_USER) --build-arg DATABASE_PASSWORD=$(DATABASE_PASSWORD)
+# AZURE_SUBSCRIPTION
+# AZURE_RESOURCE_GROUP
+# AZURE_CONTAINER_REGISTRY (azurecr.io)
+# AZURE_CONTAINER_APP_NAME
+# JAVA_JDK_CLEAN_DIRECTORY
+# SONAR_SERVICE_CONNECTION
+# SONAR_PROJECT_KEY
+# SONAR_PROJECT_NAME
+
+variables:
+  # debug info
+  # - name: system.debug
+  #   value: true
+    
+  # container connections
+  - name: docker-registry-service-connection
+    value: "$(DOCKER_REGISTRY_CONNECTION)"
+  - name: docker-image-name-repository
+    value: "$(DOCKER_IMAGE_NAME_REPOSITORY)"
+
+  # container infos
+  - name: docker-dockerfile-path
+    value: '$(Build.SourcesDirectory)/Dockerfile'
+  - name: docker-tag
+    value: '$(Build.BuildId)'
+  - name: docker-build-context
+    value: '$(Build.SourcesDirectory)'
+  - name: docker-build-arguments
+    value: "$(DOCKER_BUILD_ARGS)"
+ 
+  # subscription connections
+  - name: azure-subscription
+    value: "$(AZURE_SUBSCRIPTION)"
+  - name: azure-resource-group
+    value: "$(AZURE_RESOURCE_GROUP)"
+ 
+  # container registry
+  - name: azure-container-registry
+    value: "$(AZURE_CONTAINER_REGISTRY)"
+  - name: azure-container-app-name
+    value: "$(AZURE_CONTAINER_APP_NAME)"
+
+  # java install infos
+  - name: java-version-spec
+    value: "17"
+  - name: java-jdk-architecture-option
+    value: "x64"
+  - name: java-jdk-source-option
+    value: "PreInstalled"
+  - name: java-jdk-clean-directory
+    value: "$(JAVA_JDK_CLEAN_DIRECTORY)"
+  
+  # java compile infos
+  - name: compile-java-home-option
+    value: "JDKVersion"
+  - name: compile-java-jdk-version-option
+    value: "1.17"
+  - name: compile-java-jdk-architecture-option
+    value: "x64"
+
+  # java tests infos
+  - name: test-java-home-option
+    value: "JDKVersion"
+  - name: test-java-jdk-version-option
+    value: "1.17"
+  - name: test-java-jdk-architecture-option
+    value: "x64"
+
+  # flyway infos
+  - name: flyway-version
+    value: "9.2.0"
+  - name: flyway-command
+    value: "validate"
+  - name: flyway-working-directory
+    value: "$(System.DefaultWorkingDirectory)/src/main/resources/db/migration"
+  - name: flyway-db-url
+    value: "$(FLYWAY_DB_URL)"
+  - name: flyway-db-user
+    value: "$(FLYWAY_DB_USER)"
+  - name: flyway-db-password
+    value: "$(FLYWAY_DB_PASSWORD)"
+  - name: flyway-command-options
+    value: "-schemas=public -validateMigrationNaming=true -X -ignoreMigrationPatterns=*:pending"
+
+  # cache infos
+  - name: cache-maven-path
+    value: "$(Pipeline.Workspace)/.m2/repository"
+
+  # sonar infos
+  - name: sonar-service-connection
+    value: "$(SONAR_SERVICE_CONNECTION)"
+  - name: sonar-scanner-mode
+    value: "CLI"
+  - name: sonar-project-key
+    value: "$(SONAR_PROJECT_KEY)"
+  - name: sonar-project-name
+    value: "$(SONAR_PROJECT_NAME)"
+  - name: sonar-covarage-jacoco
+    value: "target/site/jacoco/jacoco.xml"
+
+  # maven compile infos
+  - name: compile-maven-goals
+    value: "clean compile"
+  - name: compile-maven-pom-file
+    value: "pom.xml"
+  - name: compile-maven-options
+    value: "-Dmaven.test.skip=true"
+  - name: compile-maven-extra-options
+    value: "-Xmx1024m"
+
+  # maven tests infos
+  - name: test-maven-goals
+    value: "clean test"
+  - name: test-maven-pom-file
+    value: "pom.xml"
+  - name: test-maven-tests-results-file
+    value: "**/surefire-reports/TEST-*.xml"
+  - name: test-maven-code-coverage-tool
+    value: "JaCoCo"
+
+  # publish test infos
+  - name: test-result-file
+    value: "**/surefire-reports/*.xml"

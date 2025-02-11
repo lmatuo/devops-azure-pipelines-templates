@@ -1,0 +1,107 @@
+stages:
+  - stage: checkStage
+    displayName: Check Stage
+    jobs:
+      - job: checkJob
+        continueOnError: false
+        displayName: Check Variables
+        steps:
+          # Get Build Variables
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: |
+                if [ "$(Build.Reason)" == "PullRequest" ]; then
+                  echo '⚠️ It is a Pull Request ⚠️'
+                  echo '⚠️ Only this step and compile will be executed ⚠️'
+                  echo ''
+                  echo 'Build Reason: $(Build.Reason)'
+                  echo 'Pull Request ID: $(System.PullRequest.PullRequestId)'
+                  echo 'Target Branch: $(System.PullRequest.TargetBranch)'
+                  echo 'Source Branch: $(System.PullRequest.SourceBranch)'
+                else
+                  echo 'Build Reason: $(Build.Reason)'
+                  echo 'Source Branch: $(Build.SourceBranch)'
+                  echo 'Source Branch Name: $(Build.SourceBranchName)'
+                fi
+            displayName: Check Variables
+
+  - stage: buildStage
+    displayName: Build Stage
+    condition: succeeded('checkStage')
+    jobs:
+      - job: buildJob
+        continueOnError: false
+        displayName: Run Build and Cache
+        steps:
+          # Install Node
+          - task: NodeTool@0
+            inputs:
+              versionSpec: $(node-version-spec)
+            displayName: Install Node.js
+
+          # Buid Project
+          - script: |
+              npm install
+              npm run build --if-present
+              npm run test --if-present
+            displayName: Install, Build and Test
+
+          # Archive Build Artifact
+          - task: ArchiveFiles@2
+            displayName: Archive Build Artifacts
+            inputs:
+              rootFolderOrFile: $(archive-artifact-root-folder)
+              includeRootFolder: false
+              archiveType: $(archive-artifact-type)
+              archiveFile: $(archive-artifact-file)
+              replaceExistingArchive: true
+
+          # Publish Build Artifact
+          - task: PublishBuildArtifacts@1
+            displayName: Publish Build Artifact
+            inputs:
+              pathToPublish: $(publish-artifact-path)
+              artifactName: $(publish-artifact-name)
+
+  - stage: deployStage
+    displayName: Deploy Stage
+    condition: succeeded('buildStage')
+    jobs:
+      - job: Deploy
+        continueOnError: false
+        displayName: Deploy
+        steps:
+          # Download Build Artifacts
+          - task: DownloadBuildArtifacts@0
+            displayName: Download Build Artifact
+            inputs:
+              artifactName: $(download-artifact-name)
+              downloadPath: $(download-artifact-path)
+
+          # Deploy to Azure Web App
+          - task: AzureRmWebAppDeployment@4
+            displayName: Deploy to Azure
+            inputs:
+              ConnectionType: $(web-app-connection-type)
+              azureSubscription: $(azure-subscription)
+              appType: $(web-app-type)
+              WebAppName: $(azure-web-app-name)
+              packageForLinux: $(package-artifact)
+              RuntimeStack: $(web-app-runtime-stack)
+              startUpCommand: "npm run start"
+
+          # Verify Web App Update Status
+          - task: AzureCLI@2
+            displayName: Verify Update Status
+            inputs:
+              azureSubscription: $(azure-subscription)
+              scriptType: "bash"
+              scriptLocation: "inlineScript"
+              inlineScript: |
+                STATUS=$(az webapp show --name $(azure-web-app-name) --resource-group $(azure-resource-group) --query "state" -o tsv)
+                if [[ "$STATUS" != "Running" ]]; then
+                  echo "⚠️ Update failed. Web App is not running." && exit 1
+                else
+                  echo "✅ Web App updated and running successfully."
+                fi

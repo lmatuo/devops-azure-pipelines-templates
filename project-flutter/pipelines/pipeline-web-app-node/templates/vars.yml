@@ -1,0 +1,55 @@
+# Ensure variables are in the Azure DevOps variable group
+# AZURE_SUBSCRIPTION
+# AZURE_RESOURCE_GROUP
+# AZURE_WEB_APP_NAME
+
+variables:
+  # debug info
+  # - name: system.debug
+  #   value: true
+
+  # subscription connections
+  - name: azure-subscription
+    value: "$(AZURE_SUBSCRIPTION)"
+  - name: azure-resource-group
+    value: "$(AZURE_RESOURCE_GROUP)"
+  - name: azure-web-app-name
+    value: "$(AZURE_WEB_APP_NAME)"
+
+  # web app infos
+  - name: web-app-connection-type
+    value: "AzureRM"
+  - name: web-app-type
+    value: "webAppLinux"
+  - name: web-app-runtime-stack
+    value: "NODE|10.10"
+  - name: web-app-start-up-command
+    value: "npm run start"
+  
+  # node infos
+  - name: node-version-spec
+    value: "10.x"
+    
+  # archive infos
+  - name: archive-artifact-root-folder
+    value: "$(System.DefaultWorkingDirectory)"
+  - name: archive-artifact-type
+    value: "zip"
+  - name: archive-artifact-file
+    value: "$(Build.ArtifactStagingDirectory)/build_artifact.zip"
+
+  # publish infos
+  - name: publish-artifact-path
+    value: "$(Build.ArtifactStagingDirectory)/build_artifact.zip"
+  - name: publish-artifact-name
+    value: "buildArtifact"
+
+  # download infos
+  - name: download-artifact-path
+    value: "$(System.ArtifactsDirectory)"
+  - name: download-artifact-name
+    value: "buildArtifact"
+
+  # package infos
+  - name: package-artifact
+    value: "$(System.ArtifactsDirectory)/buildArtifact/build_artifact.zip"

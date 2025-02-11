@@ -1,0 +1,88 @@
+### Python bytecode files ###
+*.py[cod]
+__pycache__/
+*.so
+*.egg
+*.egg-info/
+.eggs/
+
+### Django migrations ###
+**/migrations/*
+!**/migrations/__init__.py
+
+### Environment variables ###
+.env
+.env.*
+
+### Django secret key file ###
+secret_key.txt
+
+### Database files ###
+db.sqlite3
+db.sqlite3-journal
+
+### Local development configuration ###
+/local_settings.py
+
+### Static files ###
+/staticfiles/
+/static/
+/media/
+
+### Cached or compiled translations ###
+*.mo
+
+### Coverage reports ###
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+### Test and coverage results ###
+*.log
+.tox/
+.nox/
+coverage/
+
+### Sphinx documentation ###
+docs/_build/
+
+### Virtual environments ###
+venv/
+ENV/
+env/
+.venv/
+.Python
+
+### IDE/editor configuration files ###
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+### Pyenv files ###
+.python-version
+
+### Celery beat schedule files ###
+celerybeat-schedule
+
+### Mypy cache ###
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+### Pyre type checker ###
+.pyre/
+
+### Profilers data ###
+.prof/
+
+### MacOS system files ###
+.DS_Store
+
+### Windows system files ###
+Thumbs.db

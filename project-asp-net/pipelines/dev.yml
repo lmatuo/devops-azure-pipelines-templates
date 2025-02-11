@@ -1,0 +1,11 @@
+trigger:
+  - dev
+
+pool:
+  vmImage: 'windows-latest' ⚠️
+
+variables:
+  - template: templates/vars.yml
+
+stages:
+  - template: templates/stages.yml

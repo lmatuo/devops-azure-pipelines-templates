@@ -1,0 +1,34 @@
+### Node.js ###
+/node_modules/
+/npm-debug.log
+/yarn-debug.log
+/yarn-error.log
+/package-lock.json
+/package.json.lock
+
+### Flutter ###
+/.dart_tool/
+/.build/
+/ios/Pods/
+/ios/.generated/
+/flutter_launcher_icons-*
+
+### Docker ###
+/.docker
+.dockerignore
+docker-compose.override.yml
+
+### Logs ###
+*.log
+
+### Environment Files ###
+.env
+
+### IDE/Editor specific files ###
+.vscode/
+.idea/
+*.iml
+
+### OS generated files ###
+.DS_Store
+Thumbs.db

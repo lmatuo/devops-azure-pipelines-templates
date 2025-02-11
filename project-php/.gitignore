@@ -1,0 +1,147 @@
+### Composer dependencies ###
+/vendor/
+composer.lock
+
+### PHPStorm project files ###
+.idea/
+
+### Laravel specific files ###
+/public/storage
+/storage/*.key
+/storage/*.log
+/storage/*.cache
+/storage/*.uuid
+/storage/logs
+/storage/app/public
+/bootstrap/cache/*.php
+bootstrap/compiled.php
+.env
+.env.*
+
+### Symfony specific files ###
+/var/
+/vendor/
+/.env
+/.env.local
+/.env.*.local
+/phpunit.xml
+/phpunit.xml.dist
+
+### CakePHP specific files ###
+/tmp/cache/models/*
+/tmp/cache/persistent/*
+/tmp/cache/views/*
+/tmp/logs/*
+/tmp/sessions/*
+/tmp/tests/*
+/tmp/cache/
+/tmp/logs/
+/tmp/sessions/
+/tmp/tests/
+/logs/
+/tmp/*
+/vendor/
+/composer.lock
+
+### Yii specific files ###
+runtime/
+web/assets/
+yiilite.php
+yiit.php
+composer.lock
+assets/
+protected/runtime/
+/protected/vendors/
+/protected/extensions/
+
+### Drupal specific files ###
+/sites/*/files
+/sites/*/private
+/sites/*/settings.php
+/sites/*/services.yml
+/sites/default/settings.php
+/sites/default/settings.local.php
+/sites/default/services.yml
+
+### WordPress specific files ###
+/wp-content/uploads/
+/wp-content/upgrade/
+/wp-content/plugins/
+/wp-content/mu-plugins/
+/wp-content/cache/
+/wp-content/themes/twenty*/languages/
+/wp-config.php
+
+### Joomla specific files ###
+/logs/
+/tmp/
+/cache/
+/administrator/logs/
+/administrator/cache/
+/media/
+/libraries/
+/media/
+/plugins/
+/templates/
+/tmp/
+
+### Magento specific files ###
+/app/etc/local.xml
+/media/
+/var/log/
+/var/report/
+/var/tmp/
+/var/cache/
+/var/session/
+/var/export/
+/var/import/
+
+### Laravel Mix specific files ###
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.sublime-project
+*.sublime-workspace
+
+### PHPunit ###
+.phpunit.result.cache
+
+### Other system-specific files ###
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+*.orig
+*.save
+*.sql
+*.sql.gz
+*.sql.zip
+*.tar.gz
+*.rar
+*.zip
+*.7z
+*.db
+
+### OS-specific files ###
+.DS_Store
+Thumbs.db
+
+### Logs ###
+*.log
+
+### Debug ###
+error_log
+*.bak
+
+### Temporary files ###
+*.tmp
+*.temp
+*.pid
+*.seed
+*.key
+*.crt
+*.pfx
+
+### Composer PHAR ###
+/composer.phar

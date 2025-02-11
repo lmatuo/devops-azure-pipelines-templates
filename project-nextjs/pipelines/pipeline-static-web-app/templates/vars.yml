@@ -1,0 +1,53 @@
+# Ensure variables are in the Azure DevOps variable group
+# AZURE_SUBSCRIPTION
+# AZURE_RESOURCE_GROUP
+# AZURE_STATIC_WEB_APP_TOKEN > Get it on 'Manage deployment token'
+
+variables:
+  # debug info
+  # - name: system.debug
+  #   value: true
+    
+  # subscription connections
+  - name: azure-subscription
+    value: "$(AZURE_SUBSCRIPTION)"
+  - name: azure-resource-group
+    value: "$(AZURE_RESOURCE_GROUP)"
+
+  # web app info
+  - name: azure-static-web-app-token
+    value: "$(AZURE_STATIC_WEB_APP_TOKEN)"
+
+  # node info
+  - name: node-version
+    value: "18.x"
+  - name: node-script-directory
+    value: "$(Build.SourcesDirectory)"
+
+  # cache infos
+  - name: cache-npm-path
+    value: "$(Pipeline.Workspace)/.m2/npm"
+
+  # archive infos
+  - name: archive-artifact-root-folder
+    value: "$(System.DefaultWorkingDirectory)"
+  - name: archive-artifact-type
+    value: "zip"
+  - name: archive-artifact-file
+    value: "$(Build.ArtifactStagingDirectory)/build_artifact.zip"
+
+  # publish infos
+  - name: publish-artifact-path
+    value: "$(Build.ArtifactStagingDirectory)/build_artifact.zip"
+  - name: publish-artifact-name
+    value: "buildArtifact"
+
+  # download infos
+  - name: download-artifact-path
+    value: "$(System.ArtifactsDirectory)"
+  - name: download-artifact-name
+    value: "buildArtifact"
+
+  # package infos
+  - name: package-artifact
+    value: "$(System.ArtifactsDirectory)/buildArtifact/build_artifact.zip"

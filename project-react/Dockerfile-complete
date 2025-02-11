@@ -1,0 +1,36 @@
+# Stage 1: Build the application
+FROM node:16-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json to install dependencies
+COPY package*.json ./
+
+# Install dependencies
+RUN npm cache clean --force
+RUN npm install --no-cache
+
+# Copy the entire project directory to the container
+COPY . .
+
+# Build the React app (this generates the build directory)
+RUN npm run build
+
+# Stage 2: Serve the application using Node.js
+FROM node:16-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install serve package to serve the static files
+RUN npm install -g serve
+
+# Copy the build output from the builder stage
+COPY --from=builder /app/build /app/build
+
+# Expose port 3000
+EXPOSE 3000
+
+# Serve the static files using the serve package
+CMD ["serve", "-s", "build", "-l", "3000"]
