@@ -7,10 +7,10 @@ pr:
       - hom 
 
 pool:
-  vmImage: ubuntu-22.04 ⚠️
+  vmImage: ubuntu-22.04 #⚠️#
 
 variables:
-  - group: project-hom-stack-credentials ⚠️
+  - group: project-hom-stack-credentials #⚠️#
   - template: templates/vars.yml
 
 stages:

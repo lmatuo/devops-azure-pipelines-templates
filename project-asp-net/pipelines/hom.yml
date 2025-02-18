@@ -2,7 +2,7 @@ trigger:
   - hom
 
 pool:
-  vmImage: 'windows-latest' ⚠️
+  vmImage: 'windows-latest' #⚠️#
 
 variables:
   - template: templates/vars.yml

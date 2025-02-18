@@ -7,10 +7,10 @@ pr:
       - dev 
 
 pool:
-  vmImage: ubuntu-22.04 ⚠️
+  vmImage: ubuntu-22.04 #⚠️#
 
 variables:
-  - group: project-dev-stack-credentials ⚠️
+  - group: project-dev-stack-credentials #⚠️#
   - template: templates/vars.yml
 
 stages:
