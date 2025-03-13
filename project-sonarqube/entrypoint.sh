@@ -1,13 +1,20 @@
 #!/bin/bash
 set -e
 
-DEFAULT_CMD=('/opt/java/openjdk/bin/java' '-jar' 'lib/sonarqube.jar' '-Dsonar.log.console=true')
+# Adds the vm.max_map_count setting to sysctl.conf for persistence
+# Uses sudo if necessary
+# echo "vm.max_map_count=262144" >> /etc/sysctl.conf
 
-# this if will check if the first argument is a flag
-# but only works if all arguments require a hyphenated flag
-# -v; -SL; -f arg; etc will work, but not arg1 arg2
+# Applies sysctl settings
+# sysctl -p
+
+# Default command to start SonarQube
+DEFAULT_CMD=('/opt/java/openjdk/bin/java' '-jar' 'lib/sonarqube.jar')
+
+# This if statement checks if the first argument is a flag
 if [ "$#" -eq 0 ] || [ "${1#-}" != "$1" ]; then
     set -- "${DEFAULT_CMD[@]}" "$@"
 fi
 
+# Executes the command with the provided parameters
 exec "$@"

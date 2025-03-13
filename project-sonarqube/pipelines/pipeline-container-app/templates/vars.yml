@@ -36,7 +36,5 @@ variables:
     value: "$(AZURE_RESOURCE_GROUP)"
   - name: azure-container-app-name
     value: "$(AZURE_CONTAINER_APP_NAME)"
- 
-  # container registry infos
   - name: azure-container-registry
     value: "$(AZURE_CONTAINER_REGISTRY)"

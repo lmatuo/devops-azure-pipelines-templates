@@ -43,7 +43,7 @@ stages:
               containerRegistry: $(docker-registry-service-connection)
               tags: $(docker-tag)
               buildContext: $(docker-build-context)
-              # arguments: $(docker-build-arguments)
+              #carguments: $(docker-build-arguments)
 
           # Push Docker Image
           - task: Docker@2
